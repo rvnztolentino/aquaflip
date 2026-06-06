@@ -1161,14 +1161,15 @@ export default function Game({ onNightModeChange }: GameProps) {
           onMouseDown={handleSlidePress}
           onMouseUp={handleSlideRelease}
           onMouseLeave={handleSlideRelease}
-          className={`flex-1 h-[58px] text-xs font-mono font-bold uppercase tracking-wider rounded-xl transition-all active:scale-95 border-2 shadow select-none outline-none flex items-center justify-center ${
+          className={`flex-1 h-[58px] text-xs font-mono font-bold uppercase tracking-wider rounded-xl transition-all active:scale-95 border-2 shadow select-none outline-none flex flex-col items-center justify-center leading-tight ${
             isNightMode 
               ? 'bg-[#1C1C18] border-[#E1E1D7] text-[#E1E1D7] active:bg-[#E1E1D7] active:text-[#1C1C18]' 
               : 'bg-[#F5F5F0] border-[#434338] text-[#434338] active:bg-[#434338] active:text-[#F5F5F0]'
           }`}
           style={{ touchAction: 'none' }}
         >
-          Slide
+          <span>Slide</span>
+          <span className="text-[8px] font-normal tracking-tight opacity-70 normal-case mt-0.5">Hold to Slide</span>
         </button>
         <button
           onTouchStart={handleJumpPress}
