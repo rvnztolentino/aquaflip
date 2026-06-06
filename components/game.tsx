@@ -799,16 +799,16 @@ export default function Game({ onNightModeChange }: GameProps) {
                     // Classic Yellow barrel
                     ctx.fillStyle = '#E8B85A';
                     ctx.beginPath();
-                    ctx.roundRect(obs.x, obs.y + 8, obs.width, obs.height - 18, 1);
+                    ctx.roundRect(obs.x, obs.y + 10, obs.width, obs.height - 18, 1);
                     ctx.fill();
                     ctx.stroke();
 
-                    // Sharp wood cone at bottom
+                    // Sharp wood cone at top
                     ctx.fillStyle = isNm ? '#3C3C34' : '#e2e8f0';
                     ctx.beginPath();
-                    ctx.moveTo(obs.x, obs.y + obs.height - 10);
-                    ctx.lineTo(obs.x + obs.width / 2, obs.y + obs.height);
-                    ctx.lineTo(obs.x + obs.width, obs.y + obs.height - 10);
+                    ctx.moveTo(obs.x, obs.y + 10);
+                    ctx.lineTo(obs.x + obs.width / 2, obs.y);
+                    ctx.lineTo(obs.x + obs.width, obs.y + 10);
                     ctx.closePath();
                     ctx.fill();
                     ctx.stroke();
@@ -816,20 +816,20 @@ export default function Game({ onNightModeChange }: GameProps) {
                     // core lead tip
                     ctx.fillStyle = outlineColor;
                     ctx.beginPath();
-                    ctx.moveTo(obs.x + 3, obs.y + obs.height - 4);
-                    ctx.lineTo(obs.x + obs.width / 2, obs.y + obs.height);
-                    ctx.lineTo(obs.x + obs.width - 3, obs.y + obs.height - 4);
+                    ctx.moveTo(obs.x + 3, obs.y + 4);
+                    ctx.lineTo(obs.x + obs.width / 2, obs.y);
+                    ctx.lineTo(obs.x + obs.width - 3, obs.y + 4);
                     ctx.closePath();
                     ctx.fill();
 
-                    // Pink eraser top
+                    // Pink eraser bottom
                     ctx.fillStyle = '#D15E5E';
-                    ctx.fillRect(obs.x, obs.y, obs.width, 6);
-                    ctx.strokeRect(obs.x, obs.y, obs.width, 6);
+                    ctx.fillRect(obs.x, obs.y + obs.height - 6, obs.width, 6);
+                    ctx.strokeRect(obs.x, obs.y + obs.height - 6, obs.width, 6);
 
                     // silver ferrule collar
                     ctx.fillStyle = isNm ? '#4A5568' : '#cbd5e1';
-                    ctx.fillRect(obs.x, obs.y + 6, obs.width, 2);
+                    ctx.fillRect(obs.x, obs.y + obs.height - 8, obs.width, 2);
                     break;
                 }
 
@@ -1003,31 +1003,31 @@ export default function Game({ onNightModeChange }: GameProps) {
                     // Fuselage core body
                     ctx.fillStyle = '#D15E5E';
                     ctx.beginPath();
-                    ctx.roundRect(obs.x + 4, obs.y, obs.width - 16, obs.height, [0, 8, 8, 0]);
+                    ctx.roundRect(obs.x + 12, obs.y, obs.width - 16, obs.height, [8, 0, 0, 8]);
                     ctx.fill();
                     ctx.stroke();
 
                     // rear fins
                     ctx.fillStyle = outlineColor;
                     ctx.beginPath();
-                    ctx.moveTo(obs.x + 4, obs.y);
-                    ctx.lineTo(obs.x, obs.y - 4);
-                    ctx.lineTo(obs.x + 8, obs.y + 4);
+                    ctx.moveTo(obs.x + obs.width - 4, obs.y);
+                    ctx.lineTo(obs.x + obs.width, obs.y - 4);
+                    ctx.lineTo(obs.x + obs.width - 8, obs.y + 4);
                     ctx.fill();
                     ctx.stroke();
 
                     ctx.beginPath();
-                    ctx.moveTo(obs.x + 4, obs.y + obs.height);
-                    ctx.lineTo(obs.x, obs.y + obs.height + 4);
-                    ctx.lineTo(obs.x + 8, obs.y + obs.height - 4);
+                    ctx.moveTo(obs.x + obs.width - 4, obs.y + obs.height);
+                    ctx.lineTo(obs.x + obs.width, obs.y + obs.height + 4);
+                    ctx.lineTo(obs.x + obs.width - 8, obs.y + obs.height - 4);
                     ctx.fill();
                     ctx.stroke();
 
                     // tip nosecone
                     ctx.fillStyle = '#E8B85A';
                     ctx.beginPath();
-                    ctx.moveTo(obs.x + obs.width - 12, obs.y);
-                    ctx.quadraticCurveTo(obs.x + obs.width, obs.y + obs.height / 2, obs.x + obs.width - 12, obs.y + obs.height);
+                    ctx.moveTo(obs.x + 12, obs.y);
+                    ctx.quadraticCurveTo(obs.x, obs.y + obs.height / 2, obs.x + 12, obs.y + obs.height);
                     ctx.closePath();
                     ctx.fill();
                     ctx.stroke();

@@ -29,23 +29,6 @@ Built with Google AI Studio.
    npm install
    ```
 
-3. Create a local environment file:
-
-   ```bash
-   cp .env.example .env.local
-   ```
-
-4. Update `.env.local` if you need to run with Google AI Studio or hosted app settings.
-
-## Configuration
-
-The project includes these environment variables in `.env.example`:
-
-- `GEMINI_API_KEY`: Gemini API key. Google AI Studio injects this from user secrets at runtime.
-- `APP_URL`: Hosted app URL. Google AI Studio injects this with the Cloud Run service URL.
-
-For local gameplay, no environment variables are required by the current client-side game code.
-
 ## How to Run
 
 Start the development server:
