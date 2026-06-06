@@ -1,75 +1,81 @@
 # Aquaflip
 
-A flipping bottle endless runner game inspired by Chrome Dino. Test your reflexes as you guide a flipping bottle through obstacles in an ever-accelerating challenge.
+Aquaflip is a browser-based endless runner game featuring a flipping water bottle on a desk. The player jumps, slides, and avoids classroom-themed obstacles while the game speeds up over time.
+
+Built with Google AI Studio.
 
 ## Tech Stack
 
-- **Framework:** Next.js 15
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS
-- **Animation:** Motion
-- **UI Components:** Lucide React
+- Next.js 15
+- React 19
+- TypeScript
+- Tailwind CSS
+- Motion
+- Lucide React
+- Google GenAI SDK
 
 ## Setup Instructions
 
-### Prerequisites
-
-- Node.js (v18 or higher)
-
-### Installation
-
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/rvnztolentino/aquaflip.git
    cd aquaflip
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 
-3. Create `.env.local` in the root directory (optional for local development):
+3. Create a local environment file:
+
    ```bash
    cp .env.example .env.local
    ```
 
+4. Update `.env.local` if you need to run with Google AI Studio or hosted app settings.
+
 ## Configuration
 
-Environment variables (optional for local development):
+The project includes these environment variables in `.env.example`:
 
-- `GEMINI_API_KEY` - API key for Gemini AI integration (if using AI features)
-- `APP_URL` - The URL where the app is hosted (used for self-referential links and API endpoints)
+- `GEMINI_API_KEY`: Gemini API key. Google AI Studio injects this from user secrets at runtime.
+- `APP_URL`: Hosted app URL. Google AI Studio injects this with the Cloud Run service URL.
 
-Set these in your `.env.local` file if needed.
+For local gameplay, no environment variables are required by the current client-side game code.
 
 ## How to Run
 
-**Development mode:**
+Start the development server:
+
 ```bash
 npm run dev
 ```
 
-The app will be available at `http://localhost:3000`
+Open `http://localhost:3000`.
 
-**Production build:**
+Build for production:
+
 ```bash
 npm run build
+```
+
+Run the production server:
+
+```bash
 npm start
 ```
 
-**Linting:**
+Run linting:
+
 ```bash
 npm run lint
 ```
 
-**Clean build artifacts:**
-```bash
-npm run clean
-```
-
 ## Notes
 
-- This is a client-side game built with Next.js. The game logic runs entirely in the browser.
-- The project includes optional Gemini AI integration for enhanced features.
-- Dark/light mode toggle is available in-game for customizable gameplay experience.
+- The game runs in the browser using a canvas-based game loop.
+- High score is stored in browser `localStorage`.
+- Controls support keyboard and touch input.
