@@ -16,17 +16,6 @@ export default function Home() {
       </div>
       
       <Game onNightModeChange={setIsNightMode} />
-      
-      <div className={`mt-6 w-full max-w-xs flex flex-col gap-2 font-mono text-[10px] transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#A5A599]' : 'text-[#5A5A40]'}`}>
-        <div className={`flex justify-between border-b pb-1 transition-colors duration-800 ease-in-out ${isNightMode ? 'border-[#3C3C34]' : 'border-[#D8D8CF]'}`}>
-          <span className="font-bold">SPACE / UP / TAP</span>
-          <span className={`transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#8A8A7A]' : 'text-[#8A8A7A]'}`}>JUMP (HOLD HIGHER)</span>
-        </div>
-        <div className={`flex justify-between border-b pb-1 transition-colors duration-800 ease-in-out ${isNightMode ? 'border-[#3C3C34]' : 'border-[#D8D8CF]'}`}>
-          <span className="font-bold">DOWN / SWIPE</span>
-          <span className={`transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#8A8A7A]' : 'text-[#8A8A7A]'}`}>CROUCH / SLIDE</span>
-        </div>
-      </div>
     </main>
   );
 }

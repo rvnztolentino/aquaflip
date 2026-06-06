@@ -166,6 +166,59 @@ export default function Game({ onNightModeChange }: GameProps) {
     }
   };
 
+  const handleJumpPress = (e?: React.TouchEvent | React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (gameStateRef.current === 'START' || gameStateRef.current === 'GAMEOVER') {
+      startGame();
+      return;
+    }
+    isJumpingKeyHeld.current = true;
+    const p = playerRef.current;
+    if (gameStateRef.current === 'PLAYING' && p.isGrounded && !p.isCrouching) {
+      p.velocity = JUMP_STRENGTH;
+      p.isGrounded = false;
+      p.rotation = 0; // initialize backflip
+      spawnJumpParticles();
+    }
+  };
+
+  const handleJumpRelease = (e?: React.TouchEvent | React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    isJumpingKeyHeld.current = false;
+  };
+
+  const handleSlidePress = (e?: React.TouchEvent | React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (gameStateRef.current === 'START' || gameStateRef.current === 'GAMEOVER') {
+      return;
+    }
+    isCrouchKeyHeld.current = true;
+    const p = playerRef.current;
+    if (gameStateRef.current === 'PLAYING') {
+      if (!p.isGrounded) {
+        // Air-dive/plummet
+        p.velocity = 11;
+      }
+    }
+  };
+
+  const handleSlideRelease = (e?: React.TouchEvent | React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    isCrouchKeyHeld.current = false;
+  };
+
   const spawnJumpParticles = () => {
     const p = playerRef.current;
     for (let i = 0; i < 6; i++) {
@@ -276,10 +329,6 @@ export default function Game({ onNightModeChange }: GameProps) {
     const container = containerRef.current;
     if (!container) return;
 
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let hasCrouchedInThisSwipe = false;
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.repeat) return; // Prevent OS repeat key triggers from overriding crouch timer
       if (gameStateRef.current === 'START' || gameStateRef.current === 'GAMEOVER') {
@@ -306,13 +355,7 @@ export default function Game({ onNightModeChange }: GameProps) {
       if (e.code === 'ArrowDown' || e.code === 'KeyS') {
         e.preventDefault();
         isCrouchKeyHeld.current = true;
-        if (p.isGrounded) {
-          p.isCrouching = true;
-          p.crouchTimer = 22; // Quick timing-reliant crouch window
-          p.width = 44;
-          p.height = 20;
-          p.y = Math.round(200 / getScale()) - 20; // groundY - crouch height (20)
-        } else {
+        if (!p.isGrounded) {
           // Air-dive/plummet
           p.velocity = 11;
         }
@@ -334,65 +377,16 @@ export default function Game({ onNightModeChange }: GameProps) {
         startGame();
         return;
       }
-
-      const t = e.touches[0];
-      touchStartX = t.clientX;
-      touchStartY = t.clientY;
-      hasCrouchedInThisSwipe = false;
-
-      isJumpingKeyHeld.current = true;
-      const p = playerRef.current;
-      if (p.isGrounded && !p.isCrouching) {
-        e.preventDefault();
-        p.velocity = JUMP_STRENGTH;
-        p.isGrounded = false;
-        p.rotation = 0;
-        spawnJumpParticles();
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (gameStateRef.current !== 'PLAYING') return;
-      const t = e.touches[0];
-      const diffY = t.clientY - touchStartY;
-
-      // Active swipe down gesture
-      if (diffY > 30 && !hasCrouchedInThisSwipe) {
-        e.preventDefault();
-        isJumpingKeyHeld.current = false;
-        
-        const p = playerRef.current;
-        hasCrouchedInThisSwipe = true;
-        isCrouchKeyHeld.current = true;
-        if (p.isGrounded) {
-          p.isCrouching = true;
-          p.crouchTimer = 22; // Quick timing-reliant crouch window
-          p.width = 44;
-          p.height = 20;
-          p.y = Math.round(200 / getScale()) - 20;
-        } else {
-          p.velocity = 11;
-        }
-      }
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      isJumpingKeyHeld.current = false;
-      isCrouchKeyHeld.current = false;
     };
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     container.addEventListener('touchstart', handleTouchStart, { passive: false });
-    container.addEventListener('touchmove', handleTouchMove, { passive: false });
-    container.addEventListener('touchend', handleTouchEnd);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
     };
   }, []);
 
@@ -437,20 +431,21 @@ export default function Game({ onNightModeChange }: GameProps) {
       const groundY = canvas.height - Math.round(100 / getScale());
 
       // Update Player Core States
-      if (p.isCrouching) {
-         p.crouchTimer--;
-         if (p.crouchTimer <= 0) {
+      if (isCrouchKeyHeld.current && p.isGrounded) {
+         p.isCrouching = true;
+         p.width = 44;
+         p.height = 20;
+         p.y = groundY - 20;
+         p.velocity = 0;
+         p.rotation = 0;
+      } else {
+         if (p.isCrouching) {
             p.isCrouching = false;
             p.width = 24;
             p.height = 48;
             p.y = groundY - 48;
-         } else {
-            p.y = groundY - p.height;
-            p.velocity = 0;
-            p.isGrounded = true;
-            p.rotation = 0;
          }
-      } else {
+
          // Variable Jump Heights: Halt upward velocity if button/touch is released early
          if (!isJumpingKeyHeld.current && p.velocity < -3.5) {
             p.velocity = -3.5;
@@ -1083,66 +1078,115 @@ export default function Game({ onNightModeChange }: GameProps) {
   }, [gameState]);
 
   return (
-    <div 
-        ref={containerRef} 
-        className={`relative w-full max-w-4xl mx-auto rounded-3xl overflow-hidden border shadow-xl cursor-pointer font-sans select-none touch-none transition-all duration-800 ease-in-out ${isNightMode ? 'bg-[#1C1C18] border-[#3C3C34]' : 'bg-[#F5F5F0] border-[#D8D8CF]'}`}
-    >
-      {/* Terminal UI Score Overlay */}
-      <div className="absolute top-4 right-8 flex gap-8 font-mono z-10 pointer-events-none">
-        <div className="flex flex-col items-end">
-            <span className="text-[10px] uppercase opacity-50 text-[#8A8A7A]">Hi-Score</span>
-            <span className={`text-xl font-bold transition-colors duration-800 ${isNightMode ? 'text-[#E1E1D7]' : 'text-[#434338]'}`}>{highScore.toString().padStart(5, '0')}</span>
+    <div className="w-full flex flex-col items-center select-none">
+      <div 
+          ref={containerRef} 
+          className={`relative w-full max-w-4xl mx-auto rounded-3xl overflow-hidden border shadow-xl cursor-pointer font-sans select-none touch-none transition-all duration-800 ease-in-out ${isNightMode ? 'bg-[#1C1C18] border-[#3C3C34]' : 'bg-[#F5F5F0] border-[#D8D8CF]'}`}
+      >
+        {/* Terminal UI Score Overlay */}
+        <div className="absolute top-4 right-8 flex gap-8 font-mono z-10 pointer-events-none">
+          <div className="flex flex-col items-end">
+              <span className="text-[10px] uppercase opacity-50 text-[#8A8A7A]">Hi-Score</span>
+              <span className={`text-xl font-bold transition-colors duration-800 ${isNightMode ? 'text-[#E1E1D7]' : 'text-[#434338]'}`}>{highScore.toString().padStart(5, '0')}</span>
+          </div>
+          <div className="flex flex-col items-end">
+              <span className="text-[10px] uppercase opacity-50 text-[#8A8A7A]">Current</span>
+              <span className={`text-xl font-bold transition-colors duration-800 ${isNightMode ? 'text-[#DCE4CE]' : 'text-[#5A5A40]'}`}>{score.toString().padStart(5, '0')}</span>
+          </div>
         </div>
-        <div className="flex flex-col items-end">
-            <span className="text-[10px] uppercase opacity-50 text-[#8A8A7A]">Current</span>
-            <span className={`text-xl font-bold transition-colors duration-800 ${isNightMode ? 'text-[#DCE4CE]' : 'text-[#5A5A40]'}`}>{score.toString().padStart(5, '0')}</span>
+
+        <canvas 
+          ref={canvasRef} 
+          className="block w-full touch-none"
+          style={{ imageRendering: 'pixelated', height: '300px' }}
+        />
+
+        {/* Start Overlay */}
+        {gameState === 'START' && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/5 backdrop-blur-[1px] z-20">
+            <div className="text-center max-w-sm flex flex-col items-center px-4">
+              <h1 className={`text-4xl font-black mb-1 tracking-wider uppercase italic drop-shadow-sm transition-colors duration-800 ${isNightMode ? 'text-[#E1E1D7]' : 'text-[#434338]'}`}>Aquaflip</h1>
+              <p className="text-[10.5px] text-[#8A8A7A] mb-6 font-mono tracking-widest uppercase">Desk Run Protocol</p>
+
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  startGame();
+                }}
+                className={`py-3 px-8 rounded-xl font-bold transition-all active:scale-95 text-xs uppercase tracking-widest shadow border duration-800 ${isNightMode ? 'bg-[#E1E1D7] text-[#1C1C18] border-[#E1E1D7] hover:bg-white' : 'bg-[#434338] text-white border-[#434338] hover:bg-black'}`}
+              >
+                Start Game
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Game Over Overlay */}
+        {gameState === 'GAMEOVER' && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#D15E5E]/5 backdrop-blur-[1px] z-20">
+               <div className="text-center max-w-xs w-full px-4 flex flex-col items-center">
+                   <h2 className="text-5xl font-black text-[#D15E5E] mb-1 tracking-widest italic font-sans drop-shadow-sm">Spilled!</h2>
+                   <p className="font-mono font-bold mb-6 text-[#8A8A7A] uppercase tracking-widest text-xs">Score: {score.toString().padStart(5, '0')}</p>
+                   <button 
+                      onClick={(e) => {
+                          e.stopPropagation();
+                          startGame();
+                      }}
+                      className="py-3 px-8 bg-[#D15E5E] text-white rounded-xl font-bold hover:bg-[#b04545] transition-all active:scale-95 text-xs uppercase tracking-widest shadow"
+                  >
+                      Try Again
+                   </button>
+               </div>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop View Control Guide */}
+      <div className={`hidden md:flex mt-6 w-full max-w-xs flex-col gap-2 font-mono text-[10px] transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#A5A599]' : 'text-[#5A5A40]'}`}>
+        <div className={`flex justify-between border-b pb-1 transition-colors duration-800 ease-in-out ${isNightMode ? 'border-[#3C3C34]' : 'border-[#D8D8CF]'}`}>
+          <span className="font-bold">SPACE / UP</span>
+          <span className={`transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#8A8A7A]' : 'text-[#8A8A7A]'}`}>JUMP (HOLD HIGHER)</span>
+        </div>
+        <div className={`flex justify-between border-b pb-1 transition-colors duration-800 ease-in-out ${isNightMode ? 'border-[#3C3C34]' : 'border-[#D8D8CF]'}`}>
+          <span className="font-bold">DOWN</span>
+          <span className={`transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#8A8A7A]' : 'text-[#8A8A7A]'}`}>CROUCH / SLIDE</span>
         </div>
       </div>
 
-      <canvas 
-        ref={canvasRef} 
-        className="block w-full touch-none"
-        style={{ imageRendering: 'pixelated', height: '300px' }}
-      />
-
-      {/* Start Overlay */}
-      {gameState === 'START' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/5 backdrop-blur-[1px] z-20">
-          <div className="text-center max-w-sm flex flex-col items-center px-4">
-            <h1 className={`text-4xl font-black mb-1 tracking-wider uppercase italic drop-shadow-sm transition-colors duration-800 ${isNightMode ? 'text-[#E1E1D7]' : 'text-[#434338]'}`}>Aquaflip</h1>
-            <p className="text-[10.5px] text-[#8A8A7A] mb-6 font-mono tracking-widest uppercase">Desk Run Protocol</p>
-
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                startGame();
-              }}
-              className={`py-3 px-8 rounded-xl font-bold transition-all active:scale-95 text-xs uppercase tracking-widest shadow border duration-800 ${isNightMode ? 'bg-[#E1E1D7] text-[#1C1C18] border-[#E1E1D7] hover:bg-white' : 'bg-[#434338] text-white border-[#434338] hover:bg-black'}`}
-            >
-              Start Game
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Game Over Overlay */}
-      {gameState === 'GAMEOVER' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#D15E5E]/5 backdrop-blur-[1px] z-20">
-             <div className="text-center max-w-xs w-full px-4 flex flex-col items-center">
-                 <h2 className="text-5xl font-black text-[#D15E5E] mb-1 tracking-widest italic font-sans drop-shadow-sm">Spilled!</h2>
-                 <p className="font-mono font-bold mb-6 text-[#8A8A7A] uppercase tracking-widest text-xs">Score: {score.toString().padStart(5, '0')}</p>
-                 <button 
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        startGame();
-                    }}
-                    className="py-3 px-8 bg-[#D15E5E] text-white rounded-xl font-bold hover:bg-[#b04545] transition-all active:scale-95 text-xs uppercase tracking-widest shadow"
-                >
-                    Try Again
-                 </button>
-             </div>
-        </div>
-      )}
+      {/* Mobile View Interactive Touch Buttons */}
+      <div className="flex md:hidden w-full max-w-xs mx-auto gap-4 mt-6 px-2 select-none">
+        <button
+          onTouchStart={handleSlidePress}
+          onTouchEnd={handleSlideRelease}
+          onMouseDown={handleSlidePress}
+          onMouseUp={handleSlideRelease}
+          onMouseLeave={handleSlideRelease}
+          className={`flex-1 h-[58px] text-xs font-mono font-bold uppercase tracking-wider rounded-xl transition-all active:scale-95 border-2 shadow select-none outline-none flex items-center justify-center ${
+            isNightMode 
+              ? 'bg-[#1C1C18] border-[#E1E1D7] text-[#E1E1D7] active:bg-[#E1E1D7] active:text-[#1C1C18]' 
+              : 'bg-[#F5F5F0] border-[#434338] text-[#434338] active:bg-[#434338] active:text-[#F5F5F0]'
+          }`}
+          style={{ touchAction: 'none' }}
+        >
+          Slide
+        </button>
+        <button
+          onTouchStart={handleJumpPress}
+          onTouchEnd={handleJumpRelease}
+          onMouseDown={handleJumpPress}
+          onMouseUp={handleJumpRelease}
+          onMouseLeave={handleJumpRelease}
+          className={`flex-1 h-[58px] text-xs font-mono font-bold uppercase tracking-wider rounded-xl transition-all active:scale-95 border-2 shadow select-none outline-none flex flex-col items-center justify-center leading-tight ${
+            isNightMode 
+              ? 'bg-[#1C1C18] border-[#E1E1D7] text-[#E1E1D7] active:bg-[#E1E1D7] active:text-[#1C1C18]' 
+              : 'bg-[#F5F5F0] border-[#434338] text-[#434338] active:bg-[#434338] active:text-[#F5F5F0]'
+          }`}
+          style={{ touchAction: 'none' }}
+        >
+          <span>Jump</span>
+          <span className="text-[8px] font-normal tracking-tight opacity-70 normal-case mt-0.5">Hold Higher</span>
+        </button>
+      </div>
     </div>
   );
 }
