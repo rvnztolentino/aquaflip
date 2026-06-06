@@ -761,6 +761,10 @@ export default function Game({ onNightModeChange }: GameProps) {
                 }
 
                 case 'scissors': {
+                    ctx.save();
+                    ctx.translate(0, obs.y * 2 + obs.height);
+                    ctx.scale(1, -1);
+
                     // cross metal silver blades
                     ctx.fillStyle = isNm ? '#718096' : '#cbd5e1';
                     ctx.beginPath();
@@ -792,6 +796,7 @@ export default function Game({ onNightModeChange }: GameProps) {
                     ctx.beginPath();
                     ctx.arc(obs.x + obs.width / 2, obs.y + obs.height / 2 + 2, 2.5, 0, Math.PI * 2);
                     ctx.fill();
+                    ctx.restore();
                     break;
                 }
 
