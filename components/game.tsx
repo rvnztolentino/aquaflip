@@ -1149,15 +1149,15 @@ export default function Game({ onNightModeChange }: GameProps) {
       {/* Desktop View Control Guide */}
       <div className={`hidden xl:flex mt-6 w-full max-w-xs flex-col gap-2 font-mono text-[10px] transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#A5A599]' : 'text-[#5A5A40]'}`}>
         <div className={`flex justify-between border-b pb-1 transition-colors duration-800 ease-in-out ${isNightMode ? 'border-[#3C3C34]' : 'border-[#D8D8CF]'}`}>
-          <span className="font-bold">SPACE / ↑</span>
+          <span className="font-bold">SPACE / UP</span>
           <span className={`transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#8A8A7A]' : 'text-[#8A8A7A]'}`}>JUMP</span>
         </div>
         <div className={`flex justify-between border-b pb-1 transition-colors duration-800 ease-in-out ${isNightMode ? 'border-[#3C3C34]' : 'border-[#D8D8CF]'}`}>
-          <span className="font-bold">↓</span>
+          <span className="font-bold">DOWN</span>
           <span className={`transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#8A8A7A]' : 'text-[#8A8A7A]'}`}>SLIDE</span>
         </div>
       </div>
-      <p className="hidden xl:block mt-2 font-mono text-[10px] text-[#8A8A7A]">
+      <p className="hidden xl:block mt-4 font-mono text-[10px] text-[#8A8A7A]">
         Hold to jump higher or slide longer.
       </p>
 
