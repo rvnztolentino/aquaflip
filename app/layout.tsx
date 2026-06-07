@@ -2,7 +2,7 @@ import type {Metadata} from 'next';
 import './globals.css'; // Global styles
 
 export const metadata: Metadata = {
-  title: 'AquaFlip',
+  title: 'Aquaflip',
   description: 'An endless runner game featuring a water bottle on a desk.',
 };
 
