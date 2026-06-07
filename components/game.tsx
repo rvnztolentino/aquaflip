@@ -1149,14 +1149,17 @@ export default function Game({ onNightModeChange }: GameProps) {
       {/* Desktop View Control Guide */}
       <div className={`hidden xl:flex mt-6 w-full max-w-xs flex-col gap-2 font-mono text-[10px] transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#A5A599]' : 'text-[#5A5A40]'}`}>
         <div className={`flex justify-between border-b pb-1 transition-colors duration-800 ease-in-out ${isNightMode ? 'border-[#3C3C34]' : 'border-[#D8D8CF]'}`}>
-          <span className="font-bold">SPACE / UP</span>
-          <span className={`transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#8A8A7A]' : 'text-[#8A8A7A]'}`}>JUMP (HOLD HIGHER)</span>
+          <span className="font-bold">SPACE / ↑</span>
+          <span className={`transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#8A8A7A]' : 'text-[#8A8A7A]'}`}>JUMP</span>
         </div>
         <div className={`flex justify-between border-b pb-1 transition-colors duration-800 ease-in-out ${isNightMode ? 'border-[#3C3C34]' : 'border-[#D8D8CF]'}`}>
-          <span className="font-bold">DOWN</span>
-          <span className={`transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#8A8A7A]' : 'text-[#8A8A7A]'}`}>CROUCH / SLIDE</span>
+          <span className="font-bold">↓</span>
+          <span className={`transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#8A8A7A]' : 'text-[#8A8A7A]'}`}>SLIDE</span>
         </div>
       </div>
+      <p className="hidden xl:block mt-2 font-mono text-[10px] text-[#8A8A7A]">
+        Hold to jump higher or slide longer.
+      </p>
 
       {/* Mobile View Interactive Touch Buttons */}
       <div className="flex xl:hidden w-full max-w-xs mx-auto gap-4 mt-6 px-2 select-none">
@@ -1174,7 +1177,6 @@ export default function Game({ onNightModeChange }: GameProps) {
           style={{ touchAction: 'none' }}
         >
           <span>Slide</span>
-          <span className="text-[8px] font-normal tracking-tight opacity-70 normal-case mt-0.5">Hold to Slide</span>
         </button>
         <button
           onTouchStart={handleJumpPress}
@@ -1190,9 +1192,11 @@ export default function Game({ onNightModeChange }: GameProps) {
           style={{ touchAction: 'none' }}
         >
           <span>Jump</span>
-          <span className="text-[8px] font-normal tracking-tight opacity-70 normal-case mt-0.5">Hold Higher</span>
         </button>
       </div>
+      <p className="xl:hidden mt-2 px-2 font-mono text-[10px] text-[#8A8A7A] text-center">
+        Hold to jump higher or slide longer.
+      </p>
     </div>
   );
 }
