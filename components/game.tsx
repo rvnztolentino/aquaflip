@@ -152,73 +152,6 @@ export default function Game({ onNightModeChange }: GameProps) {
     changeGameState('PLAYING');
   };
 
-  const jump = () => {
-    if (gameStateRef.current === 'START' || gameStateRef.current === 'GAMEOVER') {
-      startGame();
-      return;
-    }
-    
-    const p = playerRef.current;
-    if (gameStateRef.current === 'PLAYING' && p.isGrounded && !p.isCrouching) {
-      p.velocity = JUMP_STRENGTH;
-      p.isGrounded = false;
-      spawnJumpParticles();
-    }
-  };
-
-  const handleJumpPress = (e?: React.TouchEvent | React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    if (gameStateRef.current === 'START' || gameStateRef.current === 'GAMEOVER') {
-      startGame();
-      return;
-    }
-    isJumpingKeyHeld.current = true;
-    const p = playerRef.current;
-    if (gameStateRef.current === 'PLAYING' && p.isGrounded && !p.isCrouching) {
-      p.velocity = JUMP_STRENGTH;
-      p.isGrounded = false;
-      p.rotation = 0; // initialize backflip
-      spawnJumpParticles();
-    }
-  };
-
-  const handleJumpRelease = (e?: React.TouchEvent | React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    isJumpingKeyHeld.current = false;
-  };
-
-  const handleSlidePress = (e?: React.TouchEvent | React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    if (gameStateRef.current === 'START' || gameStateRef.current === 'GAMEOVER') {
-      return;
-    }
-    isCrouchKeyHeld.current = true;
-    const p = playerRef.current;
-    if (gameStateRef.current === 'PLAYING') {
-      if (!p.isGrounded) {
-        // Air-dive/plummet
-        p.velocity = 11;
-      }
-    }
-  };
-
-  const handleSlideRelease = (e?: React.TouchEvent | React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    isCrouchKeyHeld.current = false;
-  };
-
   const spawnJumpParticles = () => {
     const p = playerRef.current;
     for (let i = 0; i < 6; i++) {
@@ -372,21 +305,46 @@ export default function Game({ onNightModeChange }: GameProps) {
     };
 
     const handleTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+
       if (gameStateRef.current === 'START' || gameStateRef.current === 'GAMEOVER') {
-        e.preventDefault();
         startGame();
         return;
       }
+
+      isJumpingKeyHeld.current = true;
+      const p = playerRef.current;
+      if (gameStateRef.current === 'PLAYING' && p.isGrounded && !p.isCrouching) {
+        p.velocity = JUMP_STRENGTH;
+        p.isGrounded = false;
+        p.rotation = 0; // initialize backflip
+        spawnJumpParticles();
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      e.preventDefault();
+      isJumpingKeyHeld.current = false;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
     };
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     container.addEventListener('touchstart', handleTouchStart, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd, { passive: false });
+    container.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchend', handleTouchEnd);
+      container.removeEventListener('touchcancel', handleTouchEnd);
+      container.removeEventListener('touchmove', handleTouchMove);
     };
   }, []);
 
@@ -1161,41 +1119,15 @@ export default function Game({ onNightModeChange }: GameProps) {
         Hold to jump higher or slide longer.
       </p>
 
-      {/* Mobile View Interactive Touch Buttons */}
-      <div className="flex xl:hidden w-full max-w-xs mx-auto gap-4 mt-6 px-2 select-none">
-        <button
-          onTouchStart={handleSlidePress}
-          onTouchEnd={handleSlideRelease}
-          onMouseDown={handleSlidePress}
-          onMouseUp={handleSlideRelease}
-          onMouseLeave={handleSlideRelease}
-          className={`flex-1 h-[58px] text-xs font-mono font-bold uppercase tracking-wider rounded-xl transition-all active:scale-95 border-2 shadow select-none outline-none flex flex-col items-center justify-center leading-tight ${
-            isNightMode 
-              ? 'bg-[#1C1C18] border-[#E1E1D7] text-[#E1E1D7] active:bg-[#E1E1D7] active:text-[#1C1C18]' 
-              : 'bg-[#F5F5F0] border-[#434338] text-[#434338] active:bg-[#434338] active:text-[#F5F5F0]'
-          }`}
-          style={{ touchAction: 'none' }}
-        >
-          <span>Slide</span>
-        </button>
-        <button
-          onTouchStart={handleJumpPress}
-          onTouchEnd={handleJumpRelease}
-          onMouseDown={handleJumpPress}
-          onMouseUp={handleJumpRelease}
-          onMouseLeave={handleJumpRelease}
-          className={`flex-1 h-[58px] text-xs font-mono font-bold uppercase tracking-wider rounded-xl transition-all active:scale-95 border-2 shadow select-none outline-none flex flex-col items-center justify-center leading-tight ${
-            isNightMode 
-              ? 'bg-[#1C1C18] border-[#E1E1D7] text-[#E1E1D7] active:bg-[#E1E1D7] active:text-[#1C1C18]' 
-              : 'bg-[#F5F5F0] border-[#434338] text-[#434338] active:bg-[#434338] active:text-[#F5F5F0]'
-          }`}
-          style={{ touchAction: 'none' }}
-        >
-          <span>Jump</span>
-        </button>
+      {/* Mobile View Control Guide */}
+      <div className={`flex xl:hidden mt-6 w-full max-w-xs flex-col gap-2 font-mono text-[10px] transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#A5A599]' : 'text-[#5A5A40]'}`}>
+        <div className={`flex justify-between border-b pb-1 transition-colors duration-800 ease-in-out ${isNightMode ? 'border-[#3C3C34]' : 'border-[#D8D8CF]'}`}>
+          <span className="font-bold">TAP</span>
+          <span className={`transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#8A8A7A]' : 'text-[#8A8A7A]'}`}>JUMP</span>
+        </div>
       </div>
       <p className="xl:hidden mt-2 px-2 font-mono text-[10px] text-[#8A8A7A] text-center">
-        Hold to jump higher or slide longer.
+        Hold to jump higher.
       </p>
     </div>
   );
