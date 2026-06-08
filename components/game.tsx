@@ -9,6 +9,8 @@ const BASE_SPEED = 6.2;
 const SPEED_INCREMENT = 0.001;
 const SPAWN_MIN_DISTANCE = 340;
 const SPAWN_MAX_DISTANCE = 710;
+const LIGHT_BOTTLE_PARTICLE_COLOR = '#8F8F82';
+const DARK_BOTTLE_PARTICLE_COLOR = '#D8D8CF';
 
 type GameState = 'START' | 'PLAYING' | 'GAMEOVER';
 
@@ -154,6 +156,7 @@ export default function Game({ onNightModeChange }: GameProps) {
 
   const spawnJumpParticles = () => {
     const p = playerRef.current;
+    const particleColor = isNightModeRef.current ? DARK_BOTTLE_PARTICLE_COLOR : LIGHT_BOTTLE_PARTICLE_COLOR;
     for (let i = 0; i < 6; i++) {
       particlesRef.current.push({
         x: p.x + p.width / 2 + (Math.random() - 0.5) * 12,
@@ -162,13 +165,14 @@ export default function Game({ onNightModeChange }: GameProps) {
         vy: Math.random() * 2,
         life: 0,
         maxLife: 20 + Math.random() * 10,
-        color: '#D8D8CF'
+        color: particleColor
       });
     }
   };
 
   const spawnLandingParticles = () => {
     const p = playerRef.current;
+    const particleColor = isNightModeRef.current ? DARK_BOTTLE_PARTICLE_COLOR : LIGHT_BOTTLE_PARTICLE_COLOR;
     for (let i = 0; i < 7; i++) {
       particlesRef.current.push({
         x: p.x + p.width / 2 + (Math.random() - 0.5) * 18,
@@ -177,7 +181,7 @@ export default function Game({ onNightModeChange }: GameProps) {
         vy: -Math.random() * 1.5,
         life: 0,
         maxLife: 15 + Math.random() * 8,
-        color: '#D8D8CF'
+        color: particleColor
       });
     }
   };
@@ -573,7 +577,7 @@ export default function Game({ onNightModeChange }: GameProps) {
                   vy: -Math.random() * 1.5,
                   life: 0,
                   maxLife: 12 + Math.random() * 8,
-                  color: isNm ? '#3C3C34' : '#cbd5e1'
+                  color: isNm ? '#3C3C34' : LIGHT_BOTTLE_PARTICLE_COLOR
                 });
              }
 
