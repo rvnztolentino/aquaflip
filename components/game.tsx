@@ -9,6 +9,15 @@ const BASE_SPEED = 6.2;
 const SPEED_INCREMENT = 0.001;
 const SPAWN_MIN_DISTANCE = 340;
 const SPAWN_MAX_DISTANCE = 710;
+const TARGET_FRAME_MS = 1000 / 60;
+const MAX_DELTA_SCALE = 2;
+const FPS_SAMPLE_MS = 2000;
+const LOW_FPS_THRESHOLD = 45;
+const RECOVERY_FPS_THRESHOLD = 55;
+const LOW_FPS_SAMPLE_LIMIT = 2;
+const RECOVERY_SAMPLE_LIMIT = 3;
+const MAX_PARTICLES = 90;
+const LITE_MAX_PARTICLES = 32;
 const LIGHT_BOTTLE_PARTICLE_COLOR = '#8F8F82';
 const DARK_BOTTLE_PARTICLE_COLOR = '#D8D8CF';
 
@@ -96,6 +105,11 @@ export default function Game({ onNightModeChange }: GameProps) {
   const lastScoreRef = useRef(0);
   const speedRef = useRef(BASE_SPEED);
   const reqRef = useRef<number>(0);
+  const lastFrameTimeRef = useRef<number | null>(null);
+  const fpsSampleStartRef = useRef(0);
+  const fpsFrameCountRef = useRef(0);
+  const lowFpsSampleCountRef = useRef(0);
+  const recoverySampleCountRef = useRef(0);
 
   // Keyboard / Touch status pointers for variable height mechanics
   const isJumpingKeyHeld = useRef(false);
@@ -104,6 +118,8 @@ export default function Game({ onNightModeChange }: GameProps) {
   // Speed-based night mode state
   const [isNightMode, setIsNightMode] = useState(false);
   const isNightModeRef = useRef(false);
+  const [isPerformanceLimited, setIsPerformanceLimited] = useState(false);
+  const isPerformanceLimitedRef = useRef(false);
 
   // Load High Score on Mount
   useEffect(() => {
@@ -117,6 +133,12 @@ export default function Game({ onNightModeChange }: GameProps) {
   const changeGameState = (newState: GameState) => {
     gameStateRef.current = newState;
     setGameState(newState);
+  };
+
+  const setPerformanceLimited = (nextValue: boolean) => {
+    if (isPerformanceLimitedRef.current === nextValue) return;
+    isPerformanceLimitedRef.current = nextValue;
+    setIsPerformanceLimited(nextValue);
   };
 
   const startGame = () => {
@@ -141,6 +163,11 @@ export default function Game({ onNightModeChange }: GameProps) {
     scoreRef.current = 0;
     lastScoreRef.current = 0;
     speedRef.current = BASE_SPEED;
+    lastFrameTimeRef.current = null;
+    fpsSampleStartRef.current = 0;
+    fpsFrameCountRef.current = 0;
+    lowFpsSampleCountRef.current = 0;
+    recoverySampleCountRef.current = 0;
     
     isJumpingKeyHeld.current = false;
     isCrouchKeyHeld.current = false;
@@ -154,11 +181,20 @@ export default function Game({ onNightModeChange }: GameProps) {
     changeGameState('PLAYING');
   };
 
+  const pushParticle = (particle: Particle) => {
+    const maxParticles = isPerformanceLimitedRef.current ? LITE_MAX_PARTICLES : MAX_PARTICLES;
+    if (particlesRef.current.length >= maxParticles) {
+      particlesRef.current.splice(0, particlesRef.current.length - maxParticles + 1);
+    }
+    particlesRef.current.push(particle);
+  };
+
   const spawnJumpParticles = () => {
     const p = playerRef.current;
     const particleColor = isNightModeRef.current ? DARK_BOTTLE_PARTICLE_COLOR : LIGHT_BOTTLE_PARTICLE_COLOR;
-    for (let i = 0; i < 6; i++) {
-      particlesRef.current.push({
+    const particleCount = isPerformanceLimitedRef.current ? 3 : 6;
+    for (let i = 0; i < particleCount; i++) {
+      pushParticle({
         x: p.x + p.width / 2 + (Math.random() - 0.5) * 12,
         y: p.y + p.height,
         vx: (Math.random() - 0.5) * 3,
@@ -173,8 +209,9 @@ export default function Game({ onNightModeChange }: GameProps) {
   const spawnLandingParticles = () => {
     const p = playerRef.current;
     const particleColor = isNightModeRef.current ? DARK_BOTTLE_PARTICLE_COLOR : LIGHT_BOTTLE_PARTICLE_COLOR;
-    for (let i = 0; i < 7; i++) {
-      particlesRef.current.push({
+    const particleCount = isPerformanceLimitedRef.current ? 3 : 7;
+    for (let i = 0; i < particleCount; i++) {
+      pushParticle({
         x: p.x + p.width / 2 + (Math.random() - 0.5) * 18,
         y: p.y + p.height,
         vx: (Math.random() - 0.5) * 4.5,
@@ -371,8 +408,51 @@ export default function Game({ onNightModeChange }: GameProps) {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    const gameLoop = () => {
+    const updatePerformanceState = (timestamp: number) => {
+      if (fpsSampleStartRef.current === 0) {
+        fpsSampleStartRef.current = timestamp;
+        fpsFrameCountRef.current = 0;
+      }
+
+      fpsFrameCountRef.current++;
+      const sampleElapsed = timestamp - fpsSampleStartRef.current;
+      if (sampleElapsed < FPS_SAMPLE_MS) return;
+
+      const averageFps = (fpsFrameCountRef.current * 1000) / sampleElapsed;
+      if (averageFps < LOW_FPS_THRESHOLD) {
+        lowFpsSampleCountRef.current++;
+        recoverySampleCountRef.current = 0;
+        if (lowFpsSampleCountRef.current >= LOW_FPS_SAMPLE_LIMIT) {
+          setPerformanceLimited(true);
+        }
+      } else if (averageFps > RECOVERY_FPS_THRESHOLD) {
+        recoverySampleCountRef.current++;
+        lowFpsSampleCountRef.current = 0;
+        if (recoverySampleCountRef.current >= RECOVERY_SAMPLE_LIMIT) {
+          setPerformanceLimited(false);
+        }
+      } else {
+        lowFpsSampleCountRef.current = 0;
+        recoverySampleCountRef.current = 0;
+      }
+
+      fpsSampleStartRef.current = timestamp;
+      fpsFrameCountRef.current = 0;
+    };
+
+    const getDeltaScale = (timestamp: number) => {
+      const previousFrameTime = lastFrameTimeRef.current;
+      lastFrameTimeRef.current = timestamp;
+      if (previousFrameTime === null) return 1;
+
+      const elapsed = Math.max(0, timestamp - previousFrameTime);
+      return Math.min(MAX_DELTA_SCALE, elapsed / TARGET_FRAME_MS);
+    };
+
+    const gameLoop = (timestamp: number) => {
       reqRef.current = requestAnimationFrame(gameLoop);
+      const deltaScale = getDeltaScale(timestamp);
+      updatePerformanceState(timestamp);
       
       if (gameStateRef.current !== 'PLAYING') {
          drawBackground(ctx, canvas);
@@ -380,11 +460,11 @@ export default function Game({ onNightModeChange }: GameProps) {
          return;
       }
 
-      update(canvas);
+      update(canvas, deltaScale);
       draw(ctx, canvas);
     };
 
-    const update = (canvas: HTMLCanvasElement) => {
+    const update = (canvas: HTMLCanvasElement, deltaScale: number) => {
       const p = playerRef.current;
       const groundY = canvas.height - Math.round(100 / getScale());
 
@@ -409,12 +489,12 @@ export default function Game({ onNightModeChange }: GameProps) {
             p.velocity = -3.5;
          }
 
-         p.velocity += GRAVITY;
-         p.y += p.velocity;
+         p.y += (p.velocity * deltaScale) + (GRAVITY * deltaScale * (deltaScale + 1) / 2);
+         p.velocity += GRAVITY * deltaScale;
 
          // Smooth beautiful backflip jump animation matching exact rotation timeline
          if (!p.isGrounded) {
-            p.rotation += 0.145; // ~360 spin during ~43 frame gravity vector
+            p.rotation += 0.145 * deltaScale; // ~360 spin during ~43 frames at 60 FPS
          } else {
             p.rotation = 0;
          }
@@ -431,7 +511,7 @@ export default function Game({ onNightModeChange }: GameProps) {
       }
 
       // Update Speed
-      speedRef.current += SPEED_INCREMENT;
+      speedRef.current += SPEED_INCREMENT * deltaScale;
 
       // Check score-based night mode transitions (switching every 1000 points starting at 1000)
       if (gameStateRef.current === 'PLAYING') {
@@ -457,16 +537,16 @@ export default function Game({ onNightModeChange }: GameProps) {
         const maxFrames = Math.max(45, Math.round(SPAWN_MAX_DISTANCE / speedRef.current));
         frameRef.current = minFrames + Math.random() * (maxFrames - minFrames);
       }
-      frameRef.current--;
+      frameRef.current -= deltaScale;
 
       // Process Obestacles
       for (let i = obstaclesRef.current.length - 1; i >= 0; i--) {
         const obs = obstaclesRef.current[i];
-        obs.x -= speedRef.current;
+        obs.x -= speedRef.current * deltaScale;
 
         // Custom Rocket Trail Particles
-        if (obs.type === 'rocket' && Math.random() < 0.35) {
-           particlesRef.current.push({
+        if (obs.type === 'rocket' && Math.random() < (isPerformanceLimitedRef.current ? 0.1 : 0.35)) {
+           pushParticle({
              x: obs.x + obs.width,
              y: obs.y + obs.height / 2 + (Math.random() - 0.5) * 8,
              vx: speedRef.current * 0.45 + Math.random() * 2.5,
@@ -502,7 +582,7 @@ export default function Game({ onNightModeChange }: GameProps) {
       }
 
       // Calculate survival score over timeframe
-      scoreRef.current += 0.1 * (speedRef.current / BASE_SPEED);
+      scoreRef.current += 0.1 * (speedRef.current / BASE_SPEED) * deltaScale;
       if (Math.floor(scoreRef.current) > lastScoreRef.current) {
         lastScoreRef.current = Math.floor(scoreRef.current);
         setScore(lastScoreRef.current);
@@ -511,9 +591,9 @@ export default function Game({ onNightModeChange }: GameProps) {
       // Run aesthetic scene particles
       for (let i = particlesRef.current.length - 1; i >= 0; i--) {
         const part = particlesRef.current[i];
-        part.x += part.vx - (speedRef.current * 0.5); 
-        part.y += part.vy;
-        part.life++;
+        part.x += (part.vx - (speedRef.current * 0.5)) * deltaScale;
+        part.y += part.vy * deltaScale;
+        part.life += deltaScale;
         if (part.life >= part.maxLife) {
             particlesRef.current.splice(i, 1);
         }
@@ -565,8 +645,8 @@ export default function Game({ onNightModeChange }: GameProps) {
              const bh = p.height; // 20
              
              // Sliding scratch particle effect
-             if (gameStateRef.current === 'PLAYING' && Math.random() < 0.25) {
-                particlesRef.current.push({
+             if (gameStateRef.current === 'PLAYING' && Math.random() < (isPerformanceLimitedRef.current ? 0.08 : 0.25)) {
+                pushParticle({
                   x: p.x + (Math.random() - 0.2) * p.width,
                   y: p.y + p.height + 4,
                   vx: -speedRef.current * 0.45 - Math.random() * 2,
@@ -1063,6 +1143,15 @@ export default function Game({ onNightModeChange }: GameProps) {
           className="block w-full touch-none"
           style={{ imageRendering: 'pixelated', height: '300px' }}
         />
+
+        {isPerformanceLimited && (
+          <div
+            aria-live="polite"
+            className={`absolute bottom-3 left-3 right-3 sm:right-auto sm:max-w-xs z-10 rounded-lg border px-3 py-2 text-[10px] leading-snug font-mono uppercase tracking-wide pointer-events-none transition-colors duration-800 ${isNightMode ? 'bg-[#1C1C18]/90 border-[#3C3C34] text-[#D8D8CF]' : 'bg-[#F5F5F0]/90 border-[#D8D8CF] text-[#5A5A40]'}`}
+          >
+            Low frame rate detected. Low Power Mode may affect gameplay. Lite effects enabled.
+          </div>
+        )}
 
         {/* Start Overlay */}
         {gameState === 'START' && (
