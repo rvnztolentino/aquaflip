@@ -11,7 +11,7 @@ export default function Home() {
       <div className="w-full max-w-4xl flex flex-col items-center text-center mb-6 px-2">
         <h1 className={`text-3xl font-black uppercase tracking-widest italic transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#E1E1D7]' : 'text-[#434338]'}`}>Aquaflip</h1>
         <p className={`text-xs mt-1.5 tracking-wide font-mono transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#8A8A7A]' : 'text-[#8A8A7A]'}`}>
-          by @rvnztolentino · built with Google AI Studio
+          by @rvnztolentino
         </p>
       </div>
       
