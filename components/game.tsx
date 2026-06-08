@@ -263,9 +263,6 @@ export default function Game({ onNightModeChange }: GameProps) {
 
   // Unified Input Handler for Keyboard and Touch Events
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.repeat) return; // Prevent OS repeat key triggers from overriding crouch timer
       if (gameStateRef.current === 'START' || gameStateRef.current === 'GAMEOVER') {
@@ -337,18 +334,18 @@ export default function Game({ onNightModeChange }: GameProps) {
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
-    container.addEventListener('touchstart', handleTouchStart, { passive: false });
-    container.addEventListener('touchend', handleTouchEnd, { passive: false });
-    container.addEventListener('touchcancel', handleTouchEnd, { passive: false });
-    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchstart', handleTouchStart, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd, { passive: false });
+    window.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchend', handleTouchEnd);
-      container.removeEventListener('touchcancel', handleTouchEnd);
-      container.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchcancel', handleTouchEnd);
+      window.removeEventListener('touchmove', handleTouchMove);
     };
   }, []);
 
@@ -360,9 +357,8 @@ export default function Game({ onNightModeChange }: GameProps) {
 
     const resizeCanvas = () => {
       if (containerRef.current && canvas) {
-        const rect = containerRef.current.getBoundingClientRect();
         const scale = getScale();
-        canvas.width = Math.round(rect.width / scale);
+        canvas.width = Math.round(containerRef.current.offsetWidth / scale);
         canvas.height = Math.round(300 / scale); 
         
         if (gameStateRef.current === 'START') {
@@ -1082,7 +1078,7 @@ export default function Game({ onNightModeChange }: GameProps) {
                 }}
                 className={`py-3 px-8 rounded-xl font-bold transition-all active:scale-95 text-xs uppercase tracking-widest shadow border duration-800 ${isNightMode ? 'bg-[#E1E1D7] text-[#1C1C18] border-[#E1E1D7] hover:bg-white' : 'bg-[#434338] text-white border-[#434338] hover:bg-black'}`}
               >
-                <span className="xl:hidden">Tap to Jump</span>
+                <span className="xl:hidden">Tap to Play</span>
                 <span className="hidden xl:inline">Start Game</span>
               </button>
             </div>
