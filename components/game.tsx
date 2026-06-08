@@ -1078,7 +1078,8 @@ export default function Game({ onNightModeChange }: GameProps) {
                 }}
                 className={`py-3 px-8 rounded-xl font-bold transition-all active:scale-95 text-xs uppercase tracking-widest shadow border duration-800 ${isNightMode ? 'bg-[#E1E1D7] text-[#1C1C18] border-[#E1E1D7] hover:bg-white' : 'bg-[#434338] text-white border-[#434338] hover:bg-black'}`}
               >
-                Start Game
+                <span className="xl:hidden">Tap to Jump</span>
+                <span className="hidden xl:inline">Start Game</span>
               </button>
             </div>
           </div>
@@ -1119,13 +1120,6 @@ export default function Game({ onNightModeChange }: GameProps) {
         Hold to jump higher or slide longer.
       </p>
 
-      {/* Mobile View Control Guide */}
-      <div className={`flex xl:hidden mt-6 w-full max-w-xs flex-col gap-2 font-mono text-[10px] transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#A5A599]' : 'text-[#5A5A40]'}`}>
-        <div className={`flex justify-between border-b pb-1 transition-colors duration-800 ease-in-out ${isNightMode ? 'border-[#3C3C34]' : 'border-[#D8D8CF]'}`}>
-          <span className="font-bold">TAP</span>
-          <span className={`transition-colors duration-800 ease-in-out ${isNightMode ? 'text-[#8A8A7A]' : 'text-[#8A8A7A]'}`}>JUMP</span>
-        </div>
-      </div>
       <p className="xl:hidden mt-2 px-2 font-mono text-[10px] text-[#8A8A7A] text-center">
         Hold to jump higher.
       </p>
