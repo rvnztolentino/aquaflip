@@ -1120,7 +1120,7 @@ export default function Game({ onNightModeChange }: GameProps) {
         Hold to jump higher or slide longer.
       </p>
 
-      <p className="xl:hidden mt-2 px-2 font-mono text-[10px] text-[#8A8A7A] text-center">
+      <p className="xl:hidden mt-4 px-2 font-mono text-[10px] text-[#8A8A7A] text-center">
         Hold to jump higher.
       </p>
     </div>
